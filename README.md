@@ -22,3 +22,16 @@ InAppPay.instance.restore { type, data in
 }
 
 ```
+### iOS 13.0, *
+```swift
+Task {
+    // get product list
+    let list = await InAppPay.instance.list(productIds: ["com.test.test"])
+    
+    // start pay
+    let (type, data) = await InAppPay.instance.start("com.test.test", password: "aaa")
+    
+    /// restore pay
+    let (type, data) = await InAppPay.instance.restore()
+}
+```

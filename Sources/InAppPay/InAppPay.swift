@@ -69,7 +69,7 @@ open class InAppPay: NSObject, SKPaymentTransactionObserver, SKProductsRequestDe
     ///   - password: pay shared key
     ///   - isTestServer: is it a test server
     ///   - complated: call back
-    public func start(_ productId: String, password: String, isTestServer: Bool = false, isServerAuth: Bool = false, complated: @escaping (_ type: PayType, _ responseData: Data?) -> Void) {
+    public func start(_ productId: String, password: String, isTestServer: Bool = false, isServerAuth: Bool = false, complated: @escaping (_ type: PayType, _ data: Data?) -> Void) {
         guard !self.productMap.isEmpty else {
             complated(.noList, nil)
             return
@@ -268,6 +268,42 @@ open class InAppPay: NSObject, SKPaymentTransactionObserver, SKProductsRequestDe
         } else {
             self.statusBlock(.failed, nil)
         }
+    }
+}
+
+@available(iOS 13.0, *)
+public extension InAppPay {
+    /// According to the product id list, get the list of products that can be purchased,
+    /// and link to the Apple server for a long callback time
+    @discardableResult
+    func list(productIds: Set<String>) async -> [SKProduct] {
+        await withCheckedContinuation({ result in
+            self.list(productIds: productIds) { products in
+                result.resume(returning: products)
+            }
+        })
+    }
+    
+    /// Start in-app purchase
+    /// - Parameters:
+    ///   - productId: product identifier
+    ///   - password: pay shared key
+    ///   - isTestServer: is it a test server
+    func start(_ productId: String, password: String, isTestServer: Bool = false, isServerAuth: Bool = false) async -> (type: PayType, data: Data?) {
+        await withCheckedContinuation({ result in
+            self.start(productId, password: password, isTestServer: isTestServer, isServerAuth: isServerAuth) { type, data in
+                result.resume(returning: (type, data))
+            }
+        })
+    }
+    
+    /// restore purchase
+    func restore() async -> (type: PayType, data: Data?) {
+        await withCheckedContinuation({ result in
+            self.restore { type, data in
+                result.resume(returning: (type, data))
+            }
+        })
     }
 }
 
